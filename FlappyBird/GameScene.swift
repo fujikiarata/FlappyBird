@@ -1,4 +1,5 @@
 import SpriteKit
+import AVFoundation
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -11,12 +12,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let groundCategory: UInt32 = 1 << 1     // 0...00010
     let wallCategory: UInt32 = 1 << 2       // 0...00100
     let scoreCategory: UInt32 = 1 << 3      // 0...01000
+    let itemCategory: UInt32 = 1 << 4      // 0...01000
     
     // スコア用
     var score = 0
+    var itemScore = 0
     var scoreLabelNode:SKLabelNode!
+    var itemScoreLabelNode:SKLabelNode!
     var bestScoreLabelNode:SKLabelNode!
     let userDefaults:UserDefaults = UserDefaults.standard
+    let coin = try!  AVAudioPlayer(data: NSDataAsset(name: "coin")!.data)
     
     // SKView上にシーンが表示されたときに呼ばれるメソッド
     override func didMove(to view: SKView) {
@@ -56,6 +61,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabelNode.text = "Score:\(score)"
         self.addChild(scoreLabelNode)
         
+        // アイテムスコア表示を作成
+        itemScore = 0
+        itemScoreLabelNode = SKLabelNode()
+        itemScoreLabelNode.fontColor = UIColor.black
+        itemScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 120)
+        itemScoreLabelNode.zPosition = 100 // 一番手前に表示する
+        itemScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        itemScoreLabelNode.text = "Item Score:\(score)"
+        self.addChild(itemScoreLabelNode)
+        
         // ベストスコア表示を作成
         let bestScore = userDefaults.integer(forKey: "BEST")
         bestScoreLabelNode = SKLabelNode()
@@ -88,7 +103,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // カテゴリー設定
         bird.physicsBody?.categoryBitMask = birdCategory
         bird.physicsBody?.collisionBitMask = groundCategory | wallCategory
-        bird.physicsBody?.contactTestBitMask = groundCategory | wallCategory | scoreCategory
+        bird.physicsBody?.contactTestBitMask = groundCategory | wallCategory | scoreCategory | itemCategory
         
         // 衝突した時に回転させない
         bird.physicsBody?.allowsRotation = false
@@ -241,6 +256,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             upper.physicsBody = SKPhysicsBody(rectangleOf: wallTexture.size())
             upper.physicsBody?.isDynamic = false
             
+            // 下側の壁に物理体を設定する
+            under.physicsBody = SKPhysicsBody(rectangleOf: wallTexture.size())
+            under.physicsBody?.isDynamic = false
+            
             // 壁をまとめるノードに上側の壁を追加
             wall.addChild(upper)
             
@@ -255,6 +274,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             // 壁をまとめるノードに透明な壁を追加
             wall.addChild(scoreNode)
+            
+            // アイテムノードを作成
+            let itemImage = SKTexture(imageNamed: "bird_b")
+            itemImage.filteringMode = .linear
+            let item = SKSpriteNode(texture: itemImage)
+            
+            // TODO: ポジションを変える
+            item.position = CGPoint(x: upper.size.width + birdSize.width / 2, y: self.frame.height / 2)
+            
+            // アイテムに物理体を設定する
+            item.physicsBody = SKPhysicsBody(circleOfRadius: item.size.height / 2)
+            item.physicsBody?.categoryBitMask = self.itemCategory
+            item.physicsBody?.isDynamic = false
+            
+            wall.addChild(item)
             
             // 壁をまとめるノードにアニメーションを設定
             wall.run(wallAnimation)
@@ -326,6 +360,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 bestScoreLabelNode.text = "Best Score:\(bestScore)"
                 userDefaults.set(bestScore, forKey: "BEST")
             }
+        } else  if (contact.bodyA.categoryBitMask & itemCategory) == itemCategory || (contact.bodyB.categoryBitMask & itemCategory) == itemCategory {
+            // スコアカウント用の透明な壁と衝突した
+            print("ScoreUp")
+            contact.bodyA.node?.removeFromParent()
+            itemScore += 1
+            itemScoreLabelNode.text = "Item Score:\(itemScore)"
+            coin.play()
         } else {
             // 壁か地面と衝突した
             print("GameOver")
