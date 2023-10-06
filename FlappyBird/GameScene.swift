@@ -95,7 +95,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // スプライトを作成
         bird = SKSpriteNode(texture: birdTextureA)
-        bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
+        bird.position = CGPoint(x: self.frame.size.width * 0.5, y:self.frame.size.height * 0.7)
         
         // 物理体を設定
         bird.physicsBody = SKPhysicsBody(circleOfRadius: bird.size.height / 2)
@@ -280,8 +280,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             itemImage.filteringMode = .linear
             let item = SKSpriteNode(texture: itemImage)
             
-            // TODO: ポジションを変える
-            item.position = CGPoint(x: upper.size.width + birdSize.width / 2, y: self.frame.height / 2)
+            // 透明壁の少し先に配置
+            item.position = CGPoint(x: upper.size.width + birdSize.width + birdSize.width / 2, y: self.frame.height / 2)
             
             // アイテムに物理体を設定する
             item.physicsBody = SKPhysicsBody(circleOfRadius: item.size.height / 2)
@@ -363,7 +363,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else  if (contact.bodyA.categoryBitMask & itemCategory) == itemCategory || (contact.bodyB.categoryBitMask & itemCategory) == itemCategory {
             // スコアカウント用の透明な壁と衝突した
             print("ScoreUp")
-            contact.bodyA.node?.removeFromParent()
+            if contact.bodyA.categoryBitMask == itemCategory {
+                contact.bodyA.node?.removeFromParent()
+            } else {
+                contact.bodyB.node?.removeFromParent()
+            }
             itemScore += 1
             itemScoreLabelNode.text = "Item Score:\(itemScore)"
             coin.play()
