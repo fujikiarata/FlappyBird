@@ -202,8 +202,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let wallTexture = SKTexture(imageNamed: "wall")
         wallTexture.filteringMode = .linear
         
+        // 鳥の画像サイズを取得
+        let birdSize = SKTexture(imageNamed: "bird_a").size()
+        
         // 移動する距離を計算
-        let movingDistance = self.frame.size.width + wallTexture.size().width
+        let movingDistance = self.frame.size.width + wallTexture.size().width + birdSize.width + birdSize.width
         
         // 画面外まで移動するアクションを作成
         let moveWall = SKAction.moveBy(x: -movingDistance, y: 0, duration:4)
@@ -213,9 +216,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 2つのアニメーションを順に実行するアクションを作成
         let wallAnimation = SKAction.sequence([moveWall, removeWall])
-        
-        // 鳥の画像サイズを取得
-        let birdSize = SKTexture(imageNamed: "bird_a").size()
         
         // 鳥が通り抜ける隙間の大きさを鳥のサイズの4倍とする
         let slit_length = birdSize.height * 4
