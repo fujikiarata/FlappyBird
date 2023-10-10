@@ -254,10 +254,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             // 上側の壁に物理体を設定する
             upper.physicsBody = SKPhysicsBody(rectangleOf: wallTexture.size())
+            upper.physicsBody?.categoryBitMask = self.wallCategory
             upper.physicsBody?.isDynamic = false
             
             // 下側の壁に物理体を設定する
             under.physicsBody = SKPhysicsBody(rectangleOf: wallTexture.size())
+            under.physicsBody?.categoryBitMask = self.wallCategory
             under.physicsBody?.isDynamic = false
             
             // 壁をまとめるノードに上側の壁を追加
@@ -323,6 +325,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // スコアを0にする
         score = 0
         scoreLabelNode.text = "Score:\(score)"
+        
+        itemScore = 0
+        itemScoreLabelNode.text = "Item Score:\(itemScore)"
         
         // 鳥を初期位置に戻し、壁と地面の両方に反発するように戻す
         bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
